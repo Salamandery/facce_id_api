@@ -1,0 +1,239 @@
+CREATE TABLE escala_prestador (
+  cd_escala_prestador  NUMBER(10,0) NOT NULL,
+  cd_prestador         NUMBER(10,0) NOT NULL,
+  semana               VARCHAR(10)  NOT NULL,
+  dia                  VARCHAR(3)       NULL,
+  dia_semana           VARCHAR(10)      NULL,
+  mes                  VARCHAR(10)      NULL,
+  ano                  VARCHAR(10)      NULL,
+  ativo                VARCHAR(10)      NULL
+)
+  STORAGE (
+    NEXT       1024 K
+  )
+
+/
+
+COMMENT ON COLUMN escala_prestador.cd_escala_prestador     IS 'CODIGO PRIMARIO';
+COMMENT ON COLUMN escala_prestador.cd_prestador            IS 'NOME DO PRESTADOR';
+COMMENT ON COLUMN escala_prestador.semana                  IS 'SE PRESTADOR FOR INTEGRADO';
+COMMENT ON COLUMN escala_prestador.dia                     IS 'DATA DE NASCIMENTO';
+COMMENT ON COLUMN escala_prestador.dia_semana              IS 'CPF DO PRESTADOR';
+COMMENT ON COLUMN escala_prestador.mes                     IS 'RG DO PRESTADOR';
+COMMENT ON COLUMN escala_prestador.ano                     IS 'NUMERO DO CONSELHO DO PRESTADOR';
+COMMENT ON COLUMN escala_prestador.ativo                   IS 'CHAVE ESTRANGEIRA DA ESPECIALIDADE';
+
+/
+
+CREATE SEQUENCE escala_prestador_seq
+MINVALUE 1
+MAXVALUE 9999999999
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+
+/
+
+CREATE TABLE prestador (
+  cd_prestador          NUMBER(10,0) NOT NULL,
+  id_integrado          NUMBER(10,0) NOT NULL,
+  nm_prestador          VARCHAR(40)  NOT NULL,
+  nascimento            DATE             NULL,
+  cd_tip_conselho       NUMBER(10,0)     NULL,
+  conselho              VARCHAR(15)      NULL,
+  cpf                   VARCHAR(12)      NULL,
+  rg                    VARCHAR(10)      NULL,
+  cns                   VARCHAR(20)      NULL,
+  especialidade         VARCHAR(30)      NULL,
+  ativo                 VARCHAR(2)       NULL
+)
+  STORAGE (
+    NEXT       1024 K
+  )
+
+/
+
+COMMENT ON COLUMN prestador.cd_prestador     IS 'CODIGO PRIMARIO';
+COMMENT ON COLUMN prestador.nm_prestador     iS 'NOME DO PRESTADOR';
+COMMENT ON COLUMN prestador.id_integrado     IS 'SE PRESTADOR FOR INTEGRADO';
+COMMENT ON COLUMN prestador.nascimento       IS 'DATA DE NASCIMENTO';
+COMMENT ON COLUMN prestador.cd_tip_conselho  IS 'TIPO DE CONSELHO';
+COMMENT ON COLUMN prestador.conselho         IS 'CÓDIGO DO CONSELHO';
+COMMENT ON COLUMN prestador.cns              IS 'CNS DO PRESTADOR';
+COMMENT ON COLUMN prestador.cpf              IS 'CPF DO PRESTADOR';
+COMMENT ON COLUMN prestador.rg               IS 'RG DO PRESTADOR';
+COMMENT ON COLUMN prestador.especialidade    IS 'ESPECIALIDADE';
+COMMENT ON COLUMN prestador.ativo            IS 'SE ATIVO';
+
+/
+
+CREATE SEQUENCE prestador_seq
+MINVALUE 1
+MAXVALUE 9999999999
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+
+/
+
+CREATE TABLE reg_ent (
+  cd_reg_ent   NUMBER(10,0) NOT NULL,
+  cd_prestador NUMBER(10,0) NOT NULL,
+  dt_reg_ent   DATE         NOT NULL,
+  tp_reg_ent   VARCHAR2(3)  NULL
+)
+  STORAGE (
+    NEXT       1024 K
+  )
+
+/
+
+COMMENT ON COLUMN reg_ent.cd_reg_ent IS 'CODIGO PRIMARIO';
+COMMENT ON COLUMN reg_ent.cd_prestador IS 'CODIGO ESTRANGEIRO TABELA PRESTADOR';
+COMMENT ON COLUMN reg_ent.dt_reg_ent IS 'DATA DO REGISTRO';
+COMMENT ON COLUMN reg_ent.tp_reg_ent IS 'TIPO DO REGISTRO SENDO E - ENTRADA / S - SAIDA';
+
+/
+
+CREATE SEQUENCE reg_ent_seq
+MINVALUE 1
+MAXVALUE 9999999999
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+
+/
+
+CREATE TABLE contrato (
+  cd_contrato          NUMBER(10,0) NOT NULL,
+  cnpj                 VARCHAR(15)  NOT NULL,
+  cd_senha             VARCHAR(50)  NOT NULL,
+  descricao            VARCHAR(50)  NOT NULL,
+  data_inicio          DATE         NOT NULL,
+  data_final           DATE             NULL,
+  valor_contrato       NUMBER(10,0)     NULL,
+
+  CONSTRAINT CONTRATO_PK PRIMARY KEY (cd_contrato)
+)
+  STORAGE (
+    NEXT       1024 K
+  )
+
+/
+
+ALTER TABLE contrato
+MODIFY cd_senha VARCHAR(50);
+ALTER TABLE contrato
+MODIFY DESCRICAO VARCHAR(50);
+
+/
+
+COMMENT ON COLUMN contrato.cd_contrato    IS 'CODIGO DO CONTRATO';
+COMMENT ON COLUMN contrato.cnpj           IS 'USUARIO QUE ADMINISTRAO CONTRATO';
+COMMENT ON COLUMN contrato.cd_senha       IS 'SENHA DE ACESSO DO CONTRATO';
+COMMENT ON COLUMN contrato.descricao      IS 'DESCRICAO DO CONTRATO';
+COMMENT ON COLUMN contrato.data_inicio    IS 'DATA DO INICIO DO CONTRATO';
+COMMENT ON COLUMN contrato.data_final     IS 'DATA DO TERMINO DO CONTRATO';
+COMMENT ON COLUMN contrato.valor_contrato IS 'VALOR DO CONTRATO'
+
+/
+
+CREATE SEQUENCE contrato_seq
+MINVALUE 1
+MAXVALUE 9999999999
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+
+/
+
+ALTER TABLE REG_ENT ADD CONSTRAINT REG_ENT_PK PRIMARY KEY (CD_REG_ENT)
+ALTER TABLE ESCALA_PRESTADOR ADD CONSTRAINT ESCALA_PRESTADOR_PK PRIMARY KEY (CD_ESCALA_PRESTADOR)
+ALTER TABLE PRESTADOR ADD CONSTRAINT ESCALA_PRESTADOR_PRESTADOR_PK PRIMARY KEY (CD_PRESTADOR)
+ALTER TABLE REG_ENT ADD CONSTRAINT REG_ENTPRESTADOR_FK FOREIGN KEY (CD_PRESTADOR) REFERENCES PRESTADOR (CD_PRESTADOR)
+
+/
+
+CREATE OR REPLACE VIEW VDIC_PRESTADORES_ATIVOS AS
+
+SELECT *
+FROM FACCE_ID.PRESTADOR P
+WHERE P.ATIVO = 'S'
+
+/
+
+GRANT SELECT, UPDATE ON VDIC_PRESTADORES_ATIVOS TO FACCE_ID_USER WITH GRANT OPTION
+
+/
+
+CREATE OR REPLACE VIEW VDIC_REG_MES_P_ATIVOS AS
+
+SELECT R.CD_REG_ENT
+      ,R.DT_REG_ENT
+      ,DECODE(R.TP_REG_ENT, 'E', 'ENTRADA', 'S', 'SAIDA') TP_REG_ENT
+      ,P.CD_PRESTADOR
+      ,P.NM_PRESTADOR
+      ,P.CPF
+      ,P.CONSELHO
+FROM  FACCE_ID.REG_ENT R
+INNER JOIN FACCE_ID.PRESTADOR P
+ON    P.CD_PRESTADOR = R.CD_PRESTADOR
+WHERE P.ATIVO = 'S' AND
+      To_Char(R.DT_REG_ENT, 'MM/YYYY') = To_Char(SYSDATE, 'MM/YYYY')
+
+/
+
+GRANT SELECT, UPDATE ON VDIC_REG_MES_P_ATIVOS TO FACCE_ID_USER WITH GRANT OPTION
+
+/
+
+CREATE OR REPLACE VIEW VDIC_AUTH AS
+
+SELECT C.CNPJ, C.CD_SENHA
+FROM  FACCE_ID.CONTRATO C
+
+/
+
+GRANT SELECT, UPDATE ON VDIC_AUTH TO FACCE_ID_USER WITH GRANT OPTION
+
+
+
+
+
+
+SELECT
+  *
+FROM
+  USER_SYS_PRIVS;
+
+SELECT
+  *
+FROM
+  USER_TAB_PRIVS;
+
+SELECT
+  *
+FROM
+  USER_ROLE_PRIVS;
+
+SELECT
+  *
+FROM
+  DBA_ROLE_PRIVS;
+
+SELECT
+  *
+FROM
+  DBA_TAB_PRIVS;
+
+SELECT
+  *
+FROM
+  DBA_SYS_PRIVS;
+
+INSERT INTO FACCE_ID.CONTRATO (CD_CONTRATO, DESCRICAO, CNPJ, CD_SENHA, DATA_INICIO)
+VALUES (CONTRATO_SEQ.NEXTVAL, 'ADMINISTRACAO', '0', 'RkFDQ0VfSURfQURNSU4=', SYSDATE)
