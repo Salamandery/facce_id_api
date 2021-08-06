@@ -26,15 +26,12 @@ module.exports.auth = function(application, req, res) {
     let pass = req.body.password;
     let buff = new Buffer.from(pass);  
     let data = buff.toString('base64');
-    console.log(req.body)
     
     ora.sqlQuery("SELECT * FROM facce_id.vdic_auth WHERE cnpj = '"+user+"' and cd_senha = '"+data+"'", function(result) {
-        console.log(result);
-        if (result.rows) {
+        if (result.rows.length > 0) {
             req.session.validado = true;
             req.session.user     = user;
-            
-            res.json({status: 200, msg: 'login realizado com sucesso!', data: result.rows, token: 'valido'});
+            res.json({status: 200, msg: 'login realizado com sucesso!', data: result.rows[0], token: 'valido'});
         } else {
             var errors = [{
                 msg: 'Usuário ou senha inválidos.',
