@@ -8,7 +8,7 @@ const app = express();
 
 dotEnv.config();
 app.use(eSession({
-    secret: "gdqd87it",
+    secret: "",
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge: 12000000 }
