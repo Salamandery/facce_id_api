@@ -11,7 +11,7 @@ module.exports = function () {
     user: "postgres",
     host: "localhost",
     database: "heat.monitor",
-    password: "#gdqd87it#",
+    password: "",
     port: 5432,
   }));
 };
